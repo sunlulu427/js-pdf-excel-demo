@@ -11,67 +11,121 @@
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/base-64@1.0.0/base64.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
-<!--    https://juejin.cn/post/6924269408592347150 JS读取excel文件-->
-    <title>Vue app</title>
+    <style>
+        #app {
+            padding: 10px 50px 10px 50px;
+            font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+        }
+
+        #container {
+            background-color: aliceblue;
+            border-radius: 20px;
+            padding: 10px;
+        }
+
+        #left, #right {
+            padding: 10px;
+            background-color: antiquewhite;
+            border-radius: 20px;
+            height: 800px;
+        }
+    </style>
+    <!--    https://juejin.cn/post/6924269408592347150 JS读取excel文件-->
+    <title>Data analysis entry</title>
 </head>
 
 <body>
-    <div id="app">
-        <el-upload class="upload-demo" :on-preview="handlePreview" :on-remove="handleRemove" multiple
-            :before-remove="beforeRemove" :file-list="fileList" :on-change="handleSelectFile" :auto-upload="false"
-            accept=".pdf">
-            <el-button type="success" size="small">选择文件</el-button>
-            <div slot="tip" class="el-upload__tip">choose your excel files</div>
-        </el-upload>
-    </div>
-    <script>
-        let vm = new Vue({
-            el: "#app",
-            data() {
-                return {
-                    fileList: [],
+<div id="app">
+    <h2>Supported by BCT</h2>
+    <el-row :gutter="24" id="container">
+        <el-col :span="12">
+            <div class="grid-content bg-purple" id="left">
+                <el-upload class="upload-demo" :on-preview="handlePreview" :on-remove="handleRemove" multiple
+                           :before-remove="beforeRemove" :file-list="fileList" :on-change="handleSelectFile"
+                           :auto-upload="false"
+                           accept=".pdf">
+                    <el-button type="success" round>点击选择本地文件</el-button>
+                    <div slot="tip" class="el-upload__tip">仅支持excel类型的文件，可以同时选择多个文件</div>
+                </el-upload>
+            </div>
+        </el-col>
+
+        <el-col :span="12">
+            <div class="grid-content bg-purple" id="right">
+                <el-button type="success" @click="download" round>download</el-button>
+            </div>
+        </el-col>
+    </el-row>
+</div>
+<script>
+    let vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                fileList: [],
+            }
+        },
+        methods: {
+            download() {
+                const blob = new Blob([
+                    JSON.stringify({
+                        username: 'sunlulu.tomato',
+                        functional: 'test'
+                    }, null, 4)
+                ], {
+                    type: 'text/plain'
+                })
+                const a = document.createElement('a')
+                a.download = new Date() + '.txt'
+                // spa.style.dilay = 'none'
+                a.href = URL.createObjectURL(blob)
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+            },
+            handlePreview(file) {
+                console.log(`preview: ${file.name}`)
+            },
+            handleRemove(file, fileList) {
+                console.log(`remove: ${file.name}`)
+            },
+            beforeRemove(file, fileList) {
+                return this.$confirm(`确定移除 ${file.name}？`);
+            },
+            handleSelectFile(file, fileList) {
+                console.log(`select file ${file.name}`)
+                this.$message({
+                    message: `选择文件：${file.name}`,
+                    type: 'success'
+                })
+                this.readPdfFile(file)
+            },
+            readPdfFile(file) {
+                const reader = new FileReader()
+                // 将读取到的文件编码为DataURL
+                reader.readAsDataURL(file.raw)
+                console.log(reader)
+                reader.onload = () => {
+                    // base64格式PDF
+                    const str = reader.result
+                    const i = str.indexOf('base64,')
+                    const base64Str = str.substring(i + 7)
+                    console.log(`prefix: ${str.substring(0, i + 7)}, start index is ${i + 7}`)
+                    console.log(`base64 str size is: ${base64Str.length}`)
+                    this.renderPdf(base64Str)
+                }
+                reader.onerror = (error) => {
+                    this.$message.error(error)
                 }
             },
-            methods: {
-                handlePreview(file) {
-                    console.log(`preview: ${file.name}`)
-                },
-                handleRemove(file, fileList) {
-                    console.log(`remove: ${file.name}`)
-                },
-                beforeRemove(file, fileList) {
-                    return this.$confirm(`确定移除 ${file.name}？`);
-                },
-                handleSelectFile(file, fileList) {
-                    console.log(`select file ${file.name}`)
-                    this.readPdfFile(file)
-                },
-                readPdfFile(file) {
-                    const reader = new FileReader()
-                    // 将读取到的文件编码为DataURL
-                    reader.readAsDataURL(file.raw)
-                    console.log(reader)
-                    reader.onload = () => {
-                        // base64格式PDF
-                        const str = reader.result
-                        const i = str.indexOf('base64,')
-                        const base64Str = str.substring(i + 7)
-                        console.log(`prefix: ${str.substring(0, i + 7)}, start index is ${i + 7}`)
-                        console.log(`base64 str size is: ${base64Str.length}`)
-                        this.renderPdf(base64Str)
-                    }
-                    reader.onerror = (error) => {
-                        this.$message.error(error)
-                    }
-                },
-                renderPdf(base64Str) {
-                    console.log(`base64 str is: ${base64Str}`)
-                    const bytes = base64.decode(base64Str)
-                    console.log(bytes)
-                }
+            renderPdf(base64Str) {
+                console.log(`base64 str is: ${base64Str}`)
+                const bytes = base64.decode(base64Str)
+                console.log(bytes)
             }
-        })
-    </script>
+        }
+    })
+</script>
 </body>
 
 </html>
