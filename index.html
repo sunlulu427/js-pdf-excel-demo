@@ -8,14 +8,14 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="https://unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
     <title>Vue app</title>
 </head>
 
 <body>
     <div id="app">
-        <el-upload class="uoload-demo" :on-preview="handlePreview" :on-remove="handleRemove" multiple
-            :before-remove="beforeRemove" :file-list="fileList" :on-change="handleSelectFile"
-            :auto-upload="false"
+        <el-upload class="upload-demo" :on-preview="handlePreview" :on-remove="handleRemove" multiple
+            :before-remove="beforeRemove" :file-list="fileList" :on-change="handleSelectFile" :auto-upload="false"
             accept=".pdf">
             <el-button type="success" size="small">选择文件</el-button>
             <div slot="tip" class="el-upload__tip">choose your excel files</div>
@@ -39,11 +39,27 @@
                 beforeRemove(file, fileList) {
                     return this.$confirm(`确定移除 ${file.name}？`);
                 },
-                handleExceed(files, fileList) {
-                    this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个`);
-                },
                 handleSelectFile(file, fileList) {
                     console.log(`select file ${file.name}`)
+                    this.readPdfFile(file)
+                },
+                readPdfFile(file) {
+                    const reader = new FileReader()
+                    // 将读取到的文件编码为DataURL
+                    reader.readAsDataURL(file.raw)
+                    console.log(reader)
+                    reader.onload = () => {
+                        // base64格式PDF
+                        console.log(reader.result)
+                        const base64Str = reader.result.substring(37)
+                        this.renderPdf(base64Str)
+                    }
+                    reader.onerror = (error) => {
+                        this.$message.error(error)
+                    }
+                },
+                renderPdf(base64Str) {
+                    const pdfData = atob(base64Str)
                 }
             }
         })
