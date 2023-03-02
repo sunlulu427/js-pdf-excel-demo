@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <title>Vue app</title>
+</head>
+
+<body>
+    <div id="app">
+        <el-upload class="uoload-demo" :on-preview="handlePreview" :on-remove="handleRemove" multiple
+            :before-remove="beforeRemove" :file-list="fileList" :on-change="handleSelectFile"
+            :auto-upload="false"
+            accept=".pdf">
+            <el-button type="success" size="small">选择文件</el-button>
+            <div slot="tip" class="el-upload__tip">choose your excel files</div>
+        </el-upload>
+    </div>
+    <script>
+        let vm = new Vue({
+            el: "#app",
+            data() {
+                return {
+                    fileList: [],
+                }
+            },
+            methods: {
+                handlePreview(file) {
+                    console.log(`preview: ${file.name}`)
+                },
+                handleRemove(file, fileList) {
+                    console.log(`remove: ${file.name}`)
+                },
+                beforeRemove(file, fileList) {
+                    return this.$confirm(`确定移除 ${file.name}？`);
+                },
+                handleExceed(files, fileList) {
+                    this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个`);
+                },
+                handleSelectFile(file, fileList) {
+                    console.log(`select file ${file.name}`)
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
