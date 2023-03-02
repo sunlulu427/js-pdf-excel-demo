@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="https://unpkg.com/element-ui@2.15.13/lib/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/base-64@1.0.0/base64.min.js"></script>
     <title>Vue app</title>
 </head>
 
@@ -50,8 +51,11 @@
                     console.log(reader)
                     reader.onload = () => {
                         // base64格式PDF
-                        console.log(reader.result)
-                        const base64Str = reader.result.substring(37)
+                        const str = reader.result
+                        const i = str.indexOf('base64,')
+                        const base64Str = str.substring(i + 7)
+                        console.log(`prefix: ${str.substring(0, i + 7)}, start index is ${i + 7}`)
+                        console.log(`base64 str size is: ${base64Str.length}`)
                         this.renderPdf(base64Str)
                     }
                     reader.onerror = (error) => {
@@ -59,7 +63,9 @@
                     }
                 },
                 renderPdf(base64Str) {
-                    const pdfData = atob(base64Str)
+                    console.log(`base64 str is: ${base64Str}`)
+                    const bytes = base64.decode(base64Str)
+                    console.log(bytes)
                 }
             }
         })
